@@ -1,0 +1,103 @@
+{
+	"layer": "top",
+	"position": "top",
+	"height": 34,
+	"margin-top": 6,
+
+	"modules-center": ["group/pill"],
+
+	"group/pill": {
+		"orientation": "horizontal",
+		"modules": ["hyprland/workspaces", "clock", "mpris", "tray", "group/audio", "network", "bluetooth", "group/power"]
+	},
+
+	"mpris": {
+		"format": "{status_icon} {artist} - {title}",
+		"format-paused": "{status_icon} {artist} - {title}",
+		"status-icons": {
+			"playing": "󰏤",
+			"paused": "󰐊"
+		},
+		"max-length": 40,
+		"on-click": "playerctl play-pause",
+		"on-click-middle": "playerctl previous",
+		"on-click-right": "playerctl next",
+		"tooltip-format": "{player}: {title}\n{artist} ({album})"
+	},
+
+	"group/audio": {
+		"orientation": "horizontal",
+		"drawer": {
+			"transition-duration": 300
+		},
+		"modules": ["pulseaudio", "pulseaudio/slider"]
+	},
+
+	"pulseaudio": {
+		"format": "{icon}",
+		"format-muted": "󰝟",
+		"format-icons": {
+			"default": ["󰕿", "󰖀", "󰕾"]
+		},
+		"on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+		"tooltip-format": "{volume}%"
+	},
+
+	"pulseaudio/slider": {
+		"min": 0,
+		"max": 100,
+		"orientation": "horizontal"
+	},
+	"network": {
+		"format-wifi": "{icon}",
+		"format-ethernet": "󰈀",
+		"format-disconnected": "󰤮",
+		"format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
+		"tooltip-format-wifi": "{essid} ({signalStrength}%)\n{ipaddr}",
+		"tooltip-format-ethernet": "{ifname}\n{ipaddr}",
+		"tooltip-format-disconnected": "Disconnected",
+		"on-click": "kitty --class floating-menu -o remember_window_size=no -o initial_window_width=80c -o initial_window_height=24c -e nmtui"
+	},	
+
+	"bluetooth": {
+		"format-on": "󰂯",
+		"format-off": "󰂲",
+		"format-disabled": "󰂲",
+		"format-connected": "󰂱",
+		"tooltip-format-connected": "{device_alias}\n{num_connections} connected",
+		"tooltip-format-off": "Bluetooth off",
+		"on-click": "kitty --class floating-menu -o remember_window_size=no -o initial_window_width=80c -o initial_window_height=24c -e bluetui",
+		"on-click-right": "bluetoothctl power toggle"
+	},	
+	"group/power": {
+		"orientation": "horizontal",
+		"drawer": {
+			"transition-duration": 300,
+			"transition-left-to-right": true
+		},
+		"modules": ["custom/power", "custom/reboot", "custom/sleep"]
+	},
+
+	"custom/power": {
+		"format": "󰐥",
+		"tooltip-format": "Shut down",
+		"on-click": "hyprshutdown -t 'Shutting down...' --post-cmd 'shutdown -P 0'"
+	},
+
+	"custom/sleep": {
+		"format": "󰤄",
+		"tooltip-format": "Sleep",
+		"on-click": "systemctl suspend"
+	},
+
+	"custom/reboot": {
+		"format": "󰜉",
+		"tooltip-format": "Restart",
+		"on-click": "hyprshutdown -t 'Restarting...' --post-cmd 'reboot'"
+	},
+
+	"tray": {
+		"icon-size": 18,
+		"spacing": 10
+	}
+}
