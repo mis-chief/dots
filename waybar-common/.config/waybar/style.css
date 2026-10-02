@@ -26,6 +26,7 @@ window#waybar {
 #pulseaudio,
 #network,
 #bluetooth,
+#battery,
 #custom-power,
 #custom-sleep,
 #custom-reboot,
@@ -106,6 +107,23 @@ window#waybar {
 
 #bluetooth.connected {
     color: #89b4fa;
+}
+
+#battery.charging {
+    color: #a6e3a1;
+}
+
+#battery.warning:not(.charging) {
+    color: #f9e2af;
+}
+
+#battery.critical:not(.charging) {
+    color: #f38ba8;
+    animation: blink 1s linear infinite alternate;
+}
+
+@keyframes blink {
+    to { opacity: 0.4; }
 }
 
 #custom-power:hover  { color: #f38ba8; }  /* red */
