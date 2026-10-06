@@ -162,20 +162,19 @@ require("input")
 ---------------------
 
 local mainMod = "SUPER"
-local ipc = "noctalia msg "
+local qs = "qs -c pillshell ipc call "
 
 -- Core binds
-hl.bind(mainMod .. "+Space", hl.dsp.exec_cmd(ipc .. "panel-toggle launcher"))
-hl.bind(mainMod .. "+S", hl.dsp.exec_cmd(ipc .. "panel-toggle control-center"))
-hl.bind(mainMod .. "+comma", hl.dsp.exec_cmd(ipc .. "settings-toggle"))
-hl.bind("ALT + Tab", hl.dsp.exec_cmd(ipc .. "window-switcher hold"))
+hl.bind(mainMod .. "+Space", hl.dsp.exec_cmd(qs .. "launcher toggle"))
 
 -- Media keys
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(ipc .. "volume-up"))
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(ipc .. "volume-down"))
-hl.bind("XF86AudioMute", hl.dsp.exec_cmd(ipc .. "volume-mute"))
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(ipc .. "brightness-up"))
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(ipc .. "brightness-down"))
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),        { locked = true, repeating = true })
+hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),       { locked = true })
+
+-- Brightness: goes through the shell so it can show the OSD
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(qs .. "osd brightness up"),   { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(qs .. "osd brightness down"), { locked = true, repeating = true })
 
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
 local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close())
@@ -184,8 +183,7 @@ hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("/home/aidan/AppImages/helium.appimage"))
 
-hl.bind(mainMod .. " + equal", hl.dsp.exec_cmd(ipc .. "screenshot-region"))
-hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.exec_cmd(ipc .. "screenshot-fullscreen"))
+hl.bind(mainMod .. " + equal", hl.dsp.exec_cmd('grim -g "$(slurp -d)" - | wl-copy'))
 
 for i = 1, 9 do
     hl.bind(mainMod .. " + " .. i,           hl.dsp.focus({ workspace = i }))
