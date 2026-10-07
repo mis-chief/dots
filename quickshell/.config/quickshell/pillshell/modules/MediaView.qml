@@ -6,16 +6,6 @@ import "../services"
 Item {
     readonly property var p: Media.player
 
-    // Left click: open the control center. Right click: hide until the next track.
-    MouseArea {
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: m => {
-            if (m.button === Qt.RightButton) Media.hide()
-            else PillState.request("control", 0)
-        }
-    }
-
     RowLayout {
         anchors { fill: parent; margins: 12; rightMargin: 20 }
         spacing: 12

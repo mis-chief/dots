@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.SystemTray
 import QtQuick
 import "config"
 import "services"
@@ -7,7 +8,9 @@ import "modules"
 
 ShellRoot {
     // Singletons are lazy; referencing them here makes sure they start at launch.
-    readonly property var keepAlive: [Audio, Brightness, Notifs, Media, Workspaces]
+    // SystemTray registers the tray on D-Bus; apps that start minimized to tray
+    // (ProtonVPN...) need it there at login, not when the control center first opens.
+    readonly property var keepAlive: [Audio, Brightness, Notifs, Media, Workspaces, SystemTray.items]
 
     Variants {
         model: Quickshell.screens.filter(s =>

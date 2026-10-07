@@ -11,12 +11,15 @@ PanelWindow {
     anchors.top: true
     implicitWidth: 560
     implicitHeight: 560          // must fit the largest mode
-    exclusiveZone: 0
+    // Reserve the idle pill's strip so windows tile below it instead of underneath.
+    exclusiveZone: Config.topMargin * 2 + 32
     color: "transparent"
     mask: Region { item: pill }  // clicks outside the pill fall through
 
     WlrLayershell.namespace: "pill"
-    WlrLayershell.layer: WlrLayer.Overlay
+    // Top sits under fullscreen windows, so the resting pill and popups hide there.
+    // Modes the user opened on purpose move to Overlay and still show.
+    WlrLayershell.layer: grabsIn(PillState.mode) ? WlrLayer.Overlay : WlrLayer.Top
     WlrLayershell.keyboardFocus: (PillState.mode === "launcher" || PillState.mode === "power")
         ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
@@ -56,7 +59,7 @@ PanelWindow {
         // [width, height, radius] per mode
         readonly property var dims: ({
             idle:     [Battery.present ? 138 : 96, 32, 16],
-            media:    [380, 72, 26],
+            media:    PillState.timed ? [380, 72, 26] : [320, 32, 16],
             osd:      [260, 44, 22],
             notif:    [380, 84, 28],
             launcher: [520, 400, 28],
@@ -73,18 +76,21 @@ PanelWindow {
         Behavior on radius { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
 
         // Under the content so popups can handle their own clicks.
-        // On the idle pill: left click opens the launcher, right click the control center.
+        // On the resting pill (idle or media): left click opens the launcher, right click the control center.
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             onClicked: m => {
-                if (PillState.mode !== "idle") return
+                if (!PillState.resting) return
                 PillState.request(m.button === Qt.RightButton ? "control" : "launcher", 0)
             }
         }
 
         Slot { mode: "idle";     sourceComponent: IdleView {} }
-        Slot { mode: "media";    sourceComponent: MediaView {} }
+        // Full card for the brief popup, one line while resting on a playing track.
+        Component { id: mediaCard;    MediaView {} }
+        Component { id: mediaCompact; MediaCompact {} }
+        Slot { mode: "media";    sourceComponent: PillState.timed ? mediaCard : mediaCompact }
         Slot { mode: "osd";      sourceComponent: Osd {} }
         Slot { mode: "notif";    sourceComponent: NotifView {} }
         Slot { mode: "launcher"; sourceComponent: Launcher {} }

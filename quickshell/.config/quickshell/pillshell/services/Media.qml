@@ -13,7 +13,7 @@ Singleton {
         return ps.find(p => p.isPlaying) ?? ps[0] ?? null
     }
 
-    // Right-click hides the popup until the track or play state changes.
+    // `media toggle` (IPC) hides the popup until the track or play state changes.
     property bool dismissed: false
     readonly property bool active: player !== null && player.isPlaying && !dismissed
     // Deferred so that, on pause, the brief "paused" popup is requested first and

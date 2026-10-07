@@ -104,6 +104,9 @@ Item {
             }
         }
 
+        // --- CPU, memory, uptime, battery draw ---
+        StatsRow { Layout.fillWidth: true }
+
         // --- Tray ---
         TrayRow {
             visible: SystemTray.items.values.length > 0
