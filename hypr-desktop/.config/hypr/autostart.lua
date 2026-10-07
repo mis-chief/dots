@@ -1,5 +1,6 @@
 hl.on("hyprland.start", function () 
    hl.exec_cmd("qs -c pillshell")
+   hl.exec_cmd("wl-paste --watch cliphist store")
    hl.exec_cmd("hypridle")
    hl.exec_cmd("/home/aidan/AppImages/waywallen.appimage --no-ui")
    hl.exec_cmd("flatpak run com.protonvpn.www")

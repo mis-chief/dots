@@ -2,12 +2,12 @@
 
 A dynamic-island style pill for Hyprland, built on Quickshell. One pill at the top of the screen
 that expands for notifications, media, volume/brightness, workspaces, the control center,
-the app launcher, and the power menu.
+the app launcher, clipboard history, and the power menu.
 
 ## Install
 
     sudo pacman -S ttf-jetbrains-mono ttf-jetbrains-mono-nerd brightnessctl \
-                   networkmanager upower power-profiles-daemon
+                   networkmanager upower power-profiles-daemon cliphist wl-clipboard
     systemctl enable --now power-profiles-daemon   # don't run TLP or auto-cpufreq alongside it
     cp -r pillshell ~/.config/quickshell/pillshell
     qs -c pillshell
@@ -20,9 +20,13 @@ Quit mako, dunst, or swaync first: only one notification daemon can run at a tim
 
     hl.on("hyprland.start", function()
         hl.exec_cmd("qs -c pillshell")
+        -- cliphist only records while these run
+        hl.exec_cmd("wl-paste --type text --watch cliphist store")
+        hl.exec_cmd("wl-paste --type image --watch cliphist store")
     end)
 
     hl.bind("SUPER + SPACE",     hl.dsp.exec_cmd(qs .. "launcher toggle"))
+    hl.bind("SUPER + V",         hl.dsp.exec_cmd(qs .. "clipboard toggle"))
     hl.bind("SUPER + C",         hl.dsp.exec_cmd(qs .. "control toggle"))
     hl.bind("SUPER + SHIFT + E", hl.dsp.exec_cmd(qs .. "power toggle"))
 
@@ -42,10 +46,14 @@ Optional blur, if you make the pill translucent:
 It reserves a 48px strip at the top of the screen, so windows tile below it.
 
 **Fullscreen:** the pill and its popups (volume, brightness, workspaces, notifications) are hidden
-under a fullscreen window. The launcher, control center, and power menu still open over it.
+under a fullscreen window. The launcher, clipboard, control center, and power menu still open over it.
 
 **Launcher:** type to search apps, arrows to move, Enter to launch, Esc to close.
 Start with `>` to run a shell command instead.
+
+**Clipboard:** history from cliphist, newest first. Type to filter, arrows to move, Enter (or click)
+to copy an entry back to the clipboard, Shift+Delete to remove it, Esc to close. Images show as
+thumbnails. Needs the two `wl-paste --watch` lines from the Hyprland config above to record anything.
 
 **Control center:** volume and brightness sliders (tap the speaker to mute), then five toggles:
 Wi-Fi, Bluetooth, Do not disturb, power profile (tap to cycle saver / balanced / performance),
@@ -74,6 +82,7 @@ dot per workspace, with the current one stretched. Notifications pop up unless D
 ## IPC
 
     qs -c pillshell ipc call launcher toggle
+    qs -c pillshell ipc call clipboard toggle
     qs -c pillshell ipc call control toggle
     qs -c pillshell ipc call power toggle
     qs -c pillshell ipc call media toggle
@@ -89,7 +98,7 @@ dot per workspace, with the current one stretched. Notifications pop up unless D
                             Notifs, Power, Workspaces
     modules/Pill.qml        the window, pill sizes per mode, click-away handling
     modules/                one view per mode (IdleView, MediaView, MediaCompact, Osd,
-                            NotifView, Launcher, ControlCenter, PowerMenu) plus shared parts
+                            NotifView, Launcher, Clipboard, ControlCenter, PowerMenu) plus shared parts
                             (Icon, IconButton, Tile, PillSlider, Slot, StatsRow, TrayRow,
                             TrayMenu, WorkspaceDots)
 

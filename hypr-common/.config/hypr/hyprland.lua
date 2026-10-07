@@ -165,7 +165,8 @@ local mainMod = "SUPER"
 local qs = "qs -c pillshell ipc call "
 
 -- Core binds
-hl.bind(mainMod .. "+Space", hl.dsp.exec_cmd(qs .. "launcher toggle"))
+hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd(qs .. "launcher toggle"))
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(qs .. "clipboard toggle"))
 
 -- Media keys
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })

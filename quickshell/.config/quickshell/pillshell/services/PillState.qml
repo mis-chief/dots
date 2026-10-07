@@ -11,7 +11,7 @@ Singleton {
     property string restMode: "idle"
     property string osdKind: "volume"   // "volume" | "brightness" | "workspace"
 
-    readonly property var rank: ({ idle: 0, media: 1, osd: 2, notif: 3, control: 4, launcher: 5, power: 5 })
+    readonly property var rank: ({ idle: 0, media: 1, osd: 2, notif: 3, control: 4, launcher: 5, clipboard: 5, power: 5 })
     readonly property bool resting: mode === "idle" || mode === "media"
     // True while the current mode is a timed popup (e.g. the media card on pause).
     readonly property bool timed: revert.running

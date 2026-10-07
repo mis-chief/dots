@@ -31,6 +31,15 @@ ShellRoot {
         }
     }
 
+    // qs -c pillshell ipc call clipboard toggle
+    IpcHandler {
+        target: "clipboard"
+        function toggle(): void {
+            if (PillState.mode === "clipboard") PillState.close()
+            else PillState.request("clipboard", 0)
+        }
+    }
+
     // qs -c pillshell ipc call control toggle
     IpcHandler {
         target: "control"

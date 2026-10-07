@@ -20,7 +20,7 @@ PanelWindow {
     // Top sits under fullscreen windows, so the resting pill and popups hide there.
     // Modes the user opened on purpose move to Overlay and still show.
     WlrLayershell.layer: grabsIn(PillState.mode) ? WlrLayer.Overlay : WlrLayer.Top
-    WlrLayershell.keyboardFocus: (PillState.mode === "launcher" || PillState.mode === "power")
+    WlrLayershell.keyboardFocus: (PillState.mode === "launcher" || PillState.mode === "clipboard" || PillState.mode === "power")
         ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     // Click-away-to-close applies to the modes the user opened on purpose.
@@ -30,7 +30,7 @@ PanelWindow {
     // Opening a mode (the click, or the keyboard focus switching to Exclusive for the
     // launcher and power menu) can make Hyprland clear a grab that is already active,
     // which would close the pill straight away.
-    function grabsIn(m) { return m === "launcher" || m === "control" || m === "power" }
+    function grabsIn(m) { return m === "launcher" || m === "clipboard" || m === "control" || m === "power" }
 
     property bool grabReady: false
     Timer { id: armGrab; interval: 150; onTriggered: win.grabReady = true }
@@ -63,6 +63,7 @@ PanelWindow {
             osd:      [260, 44, 22],
             notif:    [380, 84, 28],
             launcher: [520, 400, 28],
+            clipboard: [520, 400, 28],
             control:  [440, 520, 28],
             power:    [360, 124, 28]
         })[PillState.mode] ?? [96, 32, 16]
@@ -94,6 +95,7 @@ PanelWindow {
         Slot { mode: "osd";      sourceComponent: Osd {} }
         Slot { mode: "notif";    sourceComponent: NotifView {} }
         Slot { mode: "launcher"; sourceComponent: Launcher {} }
+        Slot { mode: "clipboard"; sourceComponent: Clipboard {} }
         Slot { mode: "control";  sourceComponent: ControlCenter {} }
         Slot { mode: "power";    sourceComponent: PowerMenu {} }
     }
