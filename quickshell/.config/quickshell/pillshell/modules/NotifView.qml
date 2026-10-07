@@ -5,11 +5,13 @@ import "../services"
 Item {
     readonly property var n: Notifs.current
 
-    // Click to dismiss.
+    // Left click: open it in its app (or dismiss if it can't). Right click: dismiss.
     MouseArea {
         anchors.fill: parent
-        onClicked: {
-            Notifs.current?.dismiss()
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: m => {
+            const n = Notifs.current
+            if (m.button === Qt.RightButton || !Notifs.activate(n)) n?.dismiss()
             PillState.close()
         }
     }

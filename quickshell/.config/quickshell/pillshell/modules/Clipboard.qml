@@ -13,15 +13,22 @@ Item {
     property bool loaded: false
     property bool missing: false    // cliphist isn't installed
     property int keepIndex: 0       // selection to restore after a reload
+    property bool reloadQueued: false
 
     readonly property var results: {
         const q = input.text.toLowerCase().trim()
         return q === "" ? entries : entries.filter(e => e.preview.toLowerCase().includes(q))
     }
 
-    // Image thumbnails are decoded here. It's tmpfs, so they are gone at logout.
-    readonly property string thumbDir: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/pillshell-clip"
+    // Image entries are decoded to files here so they can be shown. The directory is
+    // emptied on every load and when the view closes: the files are full size, and
+    // cliphist reuses ids after a wipe. Without a private runtime dir, no previews.
+    readonly property string runtimeDir: Quickshell.env("XDG_RUNTIME_DIR") || ""
+    readonly property string thumbDir: runtimeDir === "" ? "" : runtimeDir + "/pillshell-clip"
     function thumbPath(e) { return thumbDir + "/" + e.id + "." + e.image.ext }
+
+    // Entries go to cliphist as their list line on stdin, which every version accepts.
+    readonly property string decode: 'printf "%s\\n" "$1" | cliphist decode'
 
     function parse(text) {
         const out = []
@@ -42,8 +49,14 @@ Item {
     function copy() {
         const e = results[list.currentIndex]
         if (!e) return
-        // The id is passed as an argument, not spliced into the script.
-        Quickshell.execDetached(["sh", "-c", 'cliphist decode "$1" | wl-copy', "sh", e.id])
+        // Decode to a file first: an entry that has since left the history must not
+        // replace the clipboard with nothing. Images are offered under their own
+        // type rather than leaving wl-copy to guess it.
+        const type = e.image ? "image/" + (e.image.ext === "jpg" ? "jpeg" : e.image.ext) : ""
+        Quickshell.execDetached(["sh", "-c",
+            'f=$(mktemp) || exit 1; ' + decode + ' > "$f" && [ -s "$f" ] && '
+            + '{ if [ -n "$2" ]; then wl-copy --type "$2" < "$f"; else wl-copy < "$f"; fi; }; rm -f "$f"',
+            "sh", e.line, type])
         PillState.close()
     }
 
@@ -51,14 +64,22 @@ Item {
         const e = results[list.currentIndex]
         if (!e || deleter.running) return
         keepIndex = list.currentIndex
-        deleter.command = ["sh", "-c", 'printf "%s\\n" "$1" | cliphist delete; [ -n "$2" ] && rm -f "$2"',
-                           "sh", e.line, e.image ? thumbPath(e) : ""]
+        deleter.command = ["sh", "-c", 'printf "%s\\n" "$1" | cliphist delete', "sh", e.line]
         deleter.running = true
+    }
+
+    // A reload asked for while one is running would be dropped, so it is queued.
+    function reload() {
+        if (lister.running) reloadQueued = true
+        else lister.running = true
     }
 
     Process {
         id: lister
-        command: ["sh", "-c", "command -v cliphist >/dev/null || exit 127; cliphist list"]
+        command: ["sh", "-c",
+            'command -v cliphist >/dev/null || exit 127; '
+            + 'if [ -n "$1" ]; then rm -rf "$1"; mkdir -m 700 "$1"; fi; cliphist list',
+            "sh", root.thumbDir]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
@@ -67,15 +88,23 @@ Item {
                 Qt.callLater(() => { list.currentIndex = Math.max(0, Math.min(root.keepIndex, list.count - 1)) })
             }
         }
-        onExited: code => root.missing = code === 127
+        onExited: code => {
+            root.missing = code === 127
+            if (!root.reloadQueued) return
+            root.reloadQueued = false
+            Qt.callLater(root.reload)
+        }
     }
 
     Process {
         id: deleter
-        onExited: lister.running = true
+        onExited: root.reload()
     }
 
     Component.onCompleted: input.forceActiveFocus()
+    Component.onDestruction: {
+        if (thumbDir !== "") Quickshell.execDetached(["rm", "-rf", thumbDir])
+    }
 
     Item {
         id: field
@@ -141,20 +170,20 @@ Item {
             required property var modelData
             required property int index
             readonly property var image: modelData.image
-            readonly property string thumb: image ? root.thumbPath(modelData) : ""
+            readonly property string thumb: image && root.thumbDir !== "" ? root.thumbPath(modelData) : ""
 
             width: list.width
             height: image ? 88 : 40
             radius: 14
             color: ListView.isCurrentItem ? Config.track : "transparent"
 
-            // Image rows decode their entry to a file once, then show it. Only rows on
+            // Image rows decode their entry to a file, then show it. Only rows on
             // screen exist, so only those are decoded.
             Process {
-                running: row.image !== null
+                running: row.thumb !== ""
                 command: ["sh", "-c",
-                    'mkdir -p -m 700 "$1" && { [ -s "$3" ] || { cliphist decode "$2" > "$3.tmp" && mv "$3.tmp" "$3"; }; }',
-                    "sh", root.thumbDir, row.modelData.id, row.thumb]
+                    '[ -s "$2" ] || { ' + root.decode + ' > "$2.tmp" && mv "$2.tmp" "$2"; }',
+                    "sh", row.modelData.line, row.thumb]
                 onExited: code => { if (code === 0) pic.source = "file://" + row.thumb }
             }
 

@@ -25,28 +25,19 @@ ShellRoot {
     // qs -c pillshell ipc call launcher toggle
     IpcHandler {
         target: "launcher"
-        function toggle(): void {
-            if (PillState.mode === "launcher") PillState.close()
-            else PillState.request("launcher", 0)
-        }
+        function toggle(): void { PillState.toggle("launcher") }
     }
 
     // qs -c pillshell ipc call clipboard toggle
     IpcHandler {
         target: "clipboard"
-        function toggle(): void {
-            if (PillState.mode === "clipboard") PillState.close()
-            else PillState.request("clipboard", 0)
-        }
+        function toggle(): void { PillState.toggle("clipboard") }
     }
 
     // qs -c pillshell ipc call control toggle
     IpcHandler {
         target: "control"
-        function toggle(): void {
-            if (PillState.mode === "control") PillState.close()
-            else PillState.request("control", 0)
-        }
+        function toggle(): void { PillState.toggle("control") }
     }
 
     // qs -c pillshell ipc call media toggle
@@ -61,10 +52,7 @@ ShellRoot {
     // qs -c pillshell ipc call power toggle
     IpcHandler {
         target: "power"
-        function toggle(): void {
-            if (PillState.mode === "power") PillState.close()
-            else PillState.request("power", 0)
-        }
+        function toggle(): void { PillState.toggle("power") }
     }
 
     // qs -c pillshell ipc call osd brightness up|down

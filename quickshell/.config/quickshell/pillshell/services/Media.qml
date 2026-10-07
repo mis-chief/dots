@@ -7,11 +7,14 @@ import "../config"
 Singleton {
     id: root
 
-    // The playing player if there is one, otherwise the first available.
+    // The playing player if there is one, otherwise the one that played last (so a
+    // pause doesn't jump to some other idle player), otherwise the first available.
+    property var last: null
     readonly property var player: {
         const ps = Mpris.players.values
-        return ps.find(p => p.isPlaying) ?? ps[0] ?? null
+        return ps.find(p => p.isPlaying) ?? (ps.includes(last) ? last : null) ?? ps[0] ?? null
     }
+    onPlayerChanged: if (player?.isPlaying) last = player
 
     // `media toggle` (IPC) hides the popup until the track or play state changes.
     property bool dismissed: false
@@ -47,7 +50,7 @@ Singleton {
             if (!root.active) root.pop()
         }
         function onIsPlayingChanged() {
-            if (root.player?.isPlaying) root.dismissed = false
+            if (root.player?.isPlaying) { root.dismissed = false; root.last = root.player }
             else root.pop()
         }
     }

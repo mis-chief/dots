@@ -21,9 +21,16 @@ Singleton {
     Timer { running: true; interval: 1500; onTriggered: root.ready = true }
 
     // The dots only appear when you switch workspaces, so the idle pill stays short.
+    // Focus moving to another monitor also changes the focused workspace; that is
+    // not a switch, so it gets no popup.
+    property string lastMonitor: ""
     onActiveChanged: {
-        if (!ready) return
+        const mon = Hyprland.focusedWorkspace?.monitor?.name ?? ""
+        const moved = mon !== "" && lastMonitor !== "" && mon !== lastMonitor
+        if (mon !== "") lastMonitor = mon
+        if (!ready || moved) return
         PillState.osdKind = "workspace"
         PillState.request("osd", Config.osdMs)
     }
+    Component.onCompleted: lastMonitor = Hyprland.focusedWorkspace?.monitor?.name ?? ""
 }

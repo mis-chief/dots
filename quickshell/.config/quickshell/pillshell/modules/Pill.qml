@@ -5,6 +5,8 @@ import QtQuick
 import "../config"
 import "../services"
 
+// The window. What each mode needs (size, layer, focus, click-away) comes from the
+// table in services/PillState.qml; this file only adds a Slot per mode at the bottom.
 PanelWindow {
     id: win
 
@@ -19,33 +21,27 @@ PanelWindow {
     WlrLayershell.namespace: "pill"
     // Top sits under fullscreen windows, so the resting pill and popups hide there.
     // Modes the user opened on purpose move to Overlay and still show.
-    WlrLayershell.layer: grabsIn(PillState.mode) ? WlrLayer.Overlay : WlrLayer.Top
-    WlrLayershell.keyboardFocus: (PillState.mode === "launcher" || PillState.mode === "clipboard" || PillState.mode === "power")
-        ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.layer: PillState.current.opened ? WlrLayer.Overlay : WlrLayer.Top
+    WlrLayershell.keyboardFocus: PillState.current.keyboard ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     // Click-away-to-close applies to the modes the user opened on purpose.
-    readonly property bool grabbing: grabsIn(PillState.mode)
-
     // The grab is armed slightly after every mode change, not just the first open.
-    // Opening a mode (the click, or the keyboard focus switching to Exclusive for the
-    // launcher and power menu) can make Hyprland clear a grab that is already active,
-    // which would close the pill straight away.
-    function grabsIn(m) { return m === "launcher" || m === "clipboard" || m === "control" || m === "power" }
-
+    // Opening a mode (the click, or the keyboard focus switching to Exclusive) can make
+    // Hyprland clear a grab that is already active, which would close the pill straight away.
     property bool grabReady: false
     Timer { id: armGrab; interval: 150; onTriggered: win.grabReady = true }
     Connections {
         target: PillState
         function onModeChanged() {
             win.grabReady = false
-            if (win.grabsIn(PillState.mode)) armGrab.restart()
+            if (PillState.modes[PillState.mode].opened) armGrab.restart()
             else armGrab.stop()
         }
     }
 
     HyprlandFocusGrab {
         windows: [win]
-        active: win.grabbing && win.grabReady
+        active: PillState.current.opened && win.grabReady
         onCleared: PillState.close()
     }
 
@@ -56,17 +52,7 @@ PanelWindow {
         color: Config.bg
         clip: true
 
-        // [width, height, radius] per mode
-        readonly property var dims: ({
-            idle:     [Battery.present ? 138 : 96, 32, 16],
-            media:    PillState.timed ? [380, 72, 26] : [320, 32, 16],
-            osd:      [260, 44, 22],
-            notif:    [380, 84, 28],
-            launcher: [520, 400, 28],
-            clipboard: [520, 400, 28],
-            control:  [440, 520, 28],
-            power:    [360, 124, 28]
-        })[PillState.mode] ?? [96, 32, 16]
+        readonly property var dims: PillState.current.size   // [width, height, radius]
 
         width: dims[0]
         height: dims[1]

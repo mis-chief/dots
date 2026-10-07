@@ -7,14 +7,16 @@ import "../config"
 Singleton {
     id: root
 
+    property bool available: false  // false on machines without a backlight (desktops)
     property real value: 0          // 0..1
     property bool showOnRead: false
     property int target: -1         // latest slider value waiting to be written
 
     // Keybind path: step, then read back and show the OSD.
     function change(dir) {
+        if (!available) return
         root.showOnRead = true
-        setter.command = ["brightnessctl", "set", dir === "up" ? "5%+" : "5%-"]
+        setter.command = ["brightnessctl", "-c", "backlight", "set", dir === "up" ? "5%+" : "5%-"]
         setter.running = true
     }
 
@@ -28,7 +30,7 @@ Singleton {
     function flush() {
         const t = target
         target = -1
-        setter.command = ["brightnessctl", "set", t + "%"]
+        setter.command = ["brightnessctl", "-c", "backlight", "set", t + "%"]
         setter.running = true
     }
 
@@ -42,11 +44,13 @@ Singleton {
 
     Process {
         id: getter
-        command: ["brightnessctl", "-m"]   // device,class,current,percent,max
+        command: ["brightnessctl", "-c", "backlight", "-m"]   // device,class,current,percent,max
         stdout: StdioCollector {
             onStreamFinished: {
-                const parts = text.trim().split(",")
-                root.value = parseInt(parts[3]) / 100
+                const pct = parseInt(text.trim().split(",")[3])
+                root.available = !isNaN(pct)
+                if (!root.available) return
+                root.value = pct / 100
                 if (root.showOnRead) {
                     root.showOnRead = false
                     PillState.osdKind = "brightness"
@@ -54,6 +58,12 @@ Singleton {
                 }
             }
         }
+    }
+
+    // Something else may have changed the brightness; re-read when the slider is shown.
+    Connections {
+        target: PillState
+        function onModeChanged() { if (PillState.mode === "control") getter.running = true }
     }
 
     Component.onCompleted: getter.running = true

@@ -49,6 +49,7 @@ Item {
         }
 
         RowLayout {
+            visible: Brightness.available   // no backlight on a desktop
             Layout.fillWidth: true
             spacing: 12
             Icon { code: Glyphs.brightness(Brightness.value) }
@@ -224,7 +225,15 @@ Item {
                     }
                 }
 
-                MouseArea { anchors.fill: parent; onClicked: modelData.dismiss() }   // tap to dismiss
+                // Left click: open it in its app (or dismiss if it can't). Right click: dismiss.
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: m => {
+                        if (m.button === Qt.RightButton || !Notifs.activate(modelData)) modelData.dismiss()
+                        else PillState.close()
+                    }
+                }
             }
         }
     }

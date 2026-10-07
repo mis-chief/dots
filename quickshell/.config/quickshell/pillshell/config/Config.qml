@@ -9,6 +9,7 @@ Singleton {
     readonly property int topMargin: 8
     readonly property int osdMs: 900
     readonly property int notifMs: 4000
+    readonly property int notifKeep: 50      // notifications kept in the control center
     readonly property int mediaMs: 3000
 
     readonly property color bg: "#000000"
