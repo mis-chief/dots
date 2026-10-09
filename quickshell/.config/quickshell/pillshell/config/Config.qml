@@ -19,7 +19,7 @@ Singleton {
     readonly property color fg: "#ececf1"
     readonly property color dim: "#8b8b98"
     readonly property color track: "#26262e"
-    readonly property color accent: "#9ad1c0"
+    readonly property color accent: "#d8a8e6"
     readonly property color warn: "#f2a48b"
     readonly property string font: "JetBrains Mono"
     // Needs a Nerd Font for icons: sudo pacman -S ttf-jetbrains-mono-nerd
