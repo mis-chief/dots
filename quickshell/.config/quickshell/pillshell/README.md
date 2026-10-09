@@ -45,7 +45,10 @@ Optional blur, if you make the pill translucent:
 ## Using it
 
 **Idle pill:** battery and clock. Left click opens the launcher, right click the control center.
-It reserves a 48px strip at the top of the screen, so windows tile below it.
+It reserves a strip at the top of the screen (its height plus the gap above it), so windows tile
+below it. The clock, the player and the volume / brightness / workspace popups are all the same
+height, so only the pill's width changes between them. To centre the pill between the screen edge
+and your windows, set `topMargin` in `config/Config.qml` to your Hyprland `general:gaps_out`.
 
 **Fullscreen:** the pill and its popups (volume, brightness, workspaces, notifications) are hidden
 under a fullscreen window. The launcher, clipboard, control center, and power menu still open over it.
@@ -86,8 +89,8 @@ start it after the tray exists:
     hl.exec_cmd("sh -c 'gdbus wait --session org.kde.StatusNotifierWatcher && protonvpn-app'")
 
 **Media:** while something is playing the pill shows the track on one line (art, title, artist,
-play/pause). On pause the full card with prev/next shows briefly, then the pill goes back to the
-clock. Clicks work as on the idle pill: left opens the launcher, right the control center. To hide the
+play/pause). With the mouse over it, the pill widens and previous / skip slide out on either side
+of play/pause. On pause it stays for a moment, then the pill goes back to the clock. Clicks work as on the idle pill: left opens the launcher, right the control center. To hide the
 track until the next one, use `qs -c pillshell ipc call media toggle`.
 
 **Popups:** volume, brightness, and workspace switches pop up briefly. Workspace switches show one
@@ -117,12 +120,13 @@ app's window if `misc:focus_on_activate` is on; otherwise it is just marked urge
     services/               Apps, Audio, Battery, Brightness, Media, Network,
                             Notifs, Power, Workspaces
     modules/Pill.qml        the window, and one Slot per mode
-    modules/                one view per mode (IdleView, MediaView, MediaCompact, Osd,
+    modules/                one view per mode (IdleView, MediaCompact, Osd,
                             NotifView, Launcher, Clipboard, ControlCenter, WifiView,
                             BluetoothView, PowerMenu) plus shared parts
                             (Icon, IconButton, Tile, Toggle, Chip, ListRow, PillSlider, Slot,
                             StatsRow, TrayRow, TrayMenu, WorkspaceDots)
 
 To change an icon, edit its code point in `config/Glyphs.qml` (see nerdfonts.com/cheat-sheet).
-To change a pill size, edit the `modes` table in `services/PillState.qml`. To add a mode, add a row
+To change a pill size, edit the `modes` table in `services/PillState.qml` (the shared height is
+`pillHeight` in `config/Config.qml`). To add a mode, add a row
 there, a `Slot` in `modules/Pill.qml`, and an `IpcHandler` in `shell.qml` if it needs a keybind.

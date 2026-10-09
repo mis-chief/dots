@@ -26,7 +26,8 @@ Singleton {
     property bool ready: false   // ignore brief popups while players register at startup
     Timer { running: true; interval: 2500; onTriggered: root.ready = true }
 
-    // Brief popup, used when not playing (pause, or a track change while paused).
+    // Keeps the player pill up for a moment when not playing (pause, or a track change
+    // while paused) before the pill goes back to the clock.
     function pop() {
         if (!ready || !player) return
         PillState.request("media", Config.mediaMs)

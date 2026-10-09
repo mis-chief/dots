@@ -13,8 +13,9 @@ PanelWindow {
     anchors.top: true
     implicitWidth: 560
     implicitHeight: 560          // must fit the largest mode
-    // Reserve the idle pill's strip so windows tile below it instead of underneath.
-    exclusiveZone: Config.topMargin * 2 + 32
+    // Reserve the pill's strip so windows tile below it instead of underneath. Nothing is
+    // added below the pill: the compositor's own window gap is the space there.
+    exclusiveZone: Config.topMargin + Config.pillHeight
     color: "transparent"
     mask: Region { item: pill }  // clicks outside the pill fall through
 
@@ -67,6 +68,8 @@ PanelWindow {
         Behavior on height { NumberAnimation { duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.05 } }
         Behavior on radius { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
 
+        HoverHandler { onHoveredChanged: PillState.hovered = hovered }
+
         // Under the content so popups can handle their own clicks.
         // On the resting pill (idle or media): left click opens the launcher, right click the control center.
         MouseArea {
@@ -79,10 +82,7 @@ PanelWindow {
         }
 
         Slot { mode: "idle";     sourceComponent: IdleView {} }
-        // Full card for the brief popup, one line while resting on a playing track.
-        Component { id: mediaCard;    MediaView {} }
-        Component { id: mediaCompact; MediaCompact {} }
-        Slot { mode: "media";    sourceComponent: PillState.timed ? mediaCard : mediaCompact }
+        Slot { mode: "media";    sourceComponent: MediaCompact {} }
         Slot { mode: "osd";      sourceComponent: Osd {} }
         Slot { mode: "notif";    sourceComponent: NotifView {} }
         Slot { mode: "launcher"; sourceComponent: Launcher {} }

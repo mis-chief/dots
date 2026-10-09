@@ -6,7 +6,10 @@ Singleton {
     // "" = first screen. Set to a monitor name (e.g. "DP-1") to pin the pill.
     readonly property string monitor: ""
 
-    readonly property int topMargin: 8
+    // Gap above the pill. Hyprland leaves its own gap (general:gaps_out) between the pill's
+    // strip and the windows, so set this to the same number to centre the pill between them.
+    readonly property int topMargin: 10
+    readonly property int pillHeight: 44     // clock, player, volume / brightness / workspace
     readonly property int osdMs: 900
     readonly property int notifMs: 4000
     readonly property int notifKeep: 50      // notifications kept in the control center
