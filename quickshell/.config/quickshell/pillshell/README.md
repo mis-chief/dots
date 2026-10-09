@@ -12,6 +12,8 @@ the app launcher, clipboard history, and the power menu.
     cp -r pillshell ~/.config/quickshell/pillshell
     qs -c pillshell
 
+Needs Quickshell 0.3.2 or newer (`qs --version`): Wi-Fi uses its NetworkManager integration.
+
 Quit mako, dunst, or swaync first: only one notification daemon can run at a time.
 
 ## Hyprland config (Lua, 0.55+)
@@ -57,10 +59,24 @@ thumbnails. Needs the two `wl-paste --watch` lines from the Hyprland config abov
 
 **Control center:** volume and brightness sliders (tap the speaker to mute), then five toggles:
 Wi-Fi, Bluetooth, Do not disturb, power profile (tap to cycle saver / balanced / performance),
-and the power menu. Below that: a stats line (CPU, memory, uptime, and battery draw with time
+and the power menu. Right click the Wi-Fi or Bluetooth toggle to pick a network or device (below).
+Below that: a stats line (CPU, memory, uptime, and battery draw with time
 left; polled only while the control center is open), tray icons, the media card, and notifications
 (left click opens one in its app, right click dismisses it, trash clears all; the newest 50 are
 kept). Click outside to close. The brightness slider only shows on machines with a backlight.
+
+**Wi-Fi:** right click the Wi-Fi toggle. Networks in range, strongest first after the connected
+and saved ones. Click one to connect; a new network that needs a password asks for it (Enter to
+connect, Esc to cancel). Click the connected network, or right click a saved one, for
+Disconnect / Forget. It scans only while this page is open. Enterprise (802.1X) and hidden
+networks are not handled here: set those up once with `nmcli` and they connect from the list.
+
+**Bluetooth:** right click the Bluetooth toggle. Click a device to connect or disconnect; a new
+device is paired first. Right click a paired device for Forget. It searches for devices only
+while this page is open. Devices that ask for a PIN or passkey can't be paired from here
+(use `bluetoothctl`).
+
+Both pages have a switch for the radio, and the arrow or Esc goes back to the control center.
 
 **Tray:** left click opens the app, right click shows its menu inside the pill, middle click sends
 its secondary action. The tray is registered as soon as the shell starts. An app launched before
@@ -102,9 +118,10 @@ app's window if `misc:focus_on_activate` is on; otherwise it is just marked urge
                             Notifs, Power, Workspaces
     modules/Pill.qml        the window, and one Slot per mode
     modules/                one view per mode (IdleView, MediaView, MediaCompact, Osd,
-                            NotifView, Launcher, Clipboard, ControlCenter, PowerMenu) plus shared parts
-                            (Icon, IconButton, Tile, PillSlider, Slot, StatsRow, TrayRow,
-                            TrayMenu, WorkspaceDots)
+                            NotifView, Launcher, Clipboard, ControlCenter, WifiView,
+                            BluetoothView, PowerMenu) plus shared parts
+                            (Icon, IconButton, Tile, Toggle, Chip, ListRow, PillSlider, Slot,
+                            StatsRow, TrayRow, TrayMenu, WorkspaceDots)
 
 To change an icon, edit its code point in `config/Glyphs.qml` (see nerdfonts.com/cheat-sheet).
 To change a pill size, edit the `modes` table in `services/PillState.qml`. To add a mode, add a row

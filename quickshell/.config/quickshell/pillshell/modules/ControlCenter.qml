@@ -73,18 +73,20 @@ Item {
             spacing: 10
             readonly property real tileWidth: (width - spacing * 4) / 5
 
-            Tile {
+            Tile {   // right click: pick a network
                 width: toggles.tileWidth
                 code: Glyphs.wifi(Network.wifiOn, Network.connected, Network.signal)
                 active: Network.wifiOn
                 onClicked: Network.toggleWifi()
+                onRightClicked: PillState.request("wifi", 0)
             }
-            Tile {
+            Tile {   // right click: pick a device
                 width: toggles.tileWidth
                 code: !root.bt?.enabled ? Glyphs.map.bluetoothOff
                     : root.btConnected > 0 ? Glyphs.map.bluetoothOn : Glyphs.map.bluetooth
                 active: root.bt?.enabled ?? false
                 onClicked: { if (root.bt) root.bt.enabled = !root.bt.enabled }
+                onRightClicked: PillState.request("bluetooth", 0)
             }
             Tile {
                 width: toggles.tileWidth

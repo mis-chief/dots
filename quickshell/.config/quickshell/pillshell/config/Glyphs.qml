@@ -18,6 +18,7 @@ Singleton {
         check:           0xF012C,  // checkmark
         back:            0xF0141,  // chevron_left
         chevronRight:    0xF0142,
+        lock:            0xF033E,
         power:           0xF0425,
         sleep:           0xF04B2,
         restart:         0xF0709,

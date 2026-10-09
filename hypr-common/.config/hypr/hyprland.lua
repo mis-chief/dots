@@ -209,6 +209,15 @@ hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
+hl.define_submap("resize", function()
+    hl.bind("right", hl.dsp.window.resize({ x =  30, y =   0, relative = true }), { repeating = true })
+    hl.bind("left",  hl.dsp.window.resize({ x = -30, y =   0, relative = true }), { repeating = true })
+    hl.bind("down",  hl.dsp.window.resize({ x =   0, y =  30, relative = true }), { repeating = true })
+    hl.bind("up",    hl.dsp.window.resize({ x =   0, y = -30, relative = true }), { repeating = true })
+    hl.bind("escape", hl.dsp.submap("reset"))
+end)
+hl.bind(mainMod .. " + ALT + R", hl.dsp.submap("resize"))
+
 --------------------------------
 ---- WINDOWS AND WORKSPACES ----
 --------------------------------

@@ -22,7 +22,12 @@ PanelWindow {
     // Top sits under fullscreen windows, so the resting pill and popups hide there.
     // Modes the user opened on purpose move to Overlay and still show.
     WlrLayershell.layer: PillState.current.opened ? WlrLayer.Overlay : WlrLayer.Top
-    WlrLayershell.keyboardFocus: PillState.current.keyboard ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // Exclusive until the grab below is armed, then OnDemand. Exclusive takes the keyboard
+    // at once, so nothing typed right after opening is lost. But while an Exclusive layer
+    // has the keyboard Hyprland does not end the grab on an outside click, so click-away
+    // would never fire. Stepping down to OnDemand keeps the focus and lets the grab work.
+    WlrLayershell.keyboardFocus: !PillState.current.keyboard ? WlrKeyboardFocus.None
+        : grabReady ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive
 
     // Click-away-to-close applies to the modes the user opened on purpose.
     // The grab is armed slightly after every mode change, not just the first open.
@@ -83,6 +88,8 @@ PanelWindow {
         Slot { mode: "launcher"; sourceComponent: Launcher {} }
         Slot { mode: "clipboard"; sourceComponent: Clipboard {} }
         Slot { mode: "control";  sourceComponent: ControlCenter {} }
+        Slot { mode: "wifi";     sourceComponent: WifiView {} }
+        Slot { mode: "bluetooth"; sourceComponent: BluetoothView {} }
         Slot { mode: "power";    sourceComponent: PowerMenu {} }
     }
 }

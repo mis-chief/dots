@@ -8,6 +8,7 @@ Rectangle {
     property int code: 0
     property bool active: false
     signal clicked()
+    signal rightClicked()
 
     implicitHeight: 52
     radius: 18
@@ -21,5 +22,9 @@ Rectangle {
         color: root.active ? Config.bg : Config.fg
     }
 
-    MouseArea { anchors.fill: parent; onClicked: root.clicked() }
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: m => m.button === Qt.RightButton ? root.rightClicked() : root.clicked()
+    }
 }

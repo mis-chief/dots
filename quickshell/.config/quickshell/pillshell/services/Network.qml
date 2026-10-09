@@ -1,64 +1,69 @@
 pragma Singleton
 import Quickshell
-import Quickshell.Io
+import Quickshell.Networking
 import QtQuick
 
-// Thin wrapper over nmcli. Event-driven where possible:
-// `nmcli monitor` is a long-lived process that costs nothing while idle, and signal
-// strength (which has no event) is only polled once a minute while Wi-Fi is on.
+// Wi-Fi through Quickshell's NetworkManager integration (needs Quickshell 0.3.2+).
+// Everything here is event-driven. The only active work is scanning, and that
+// runs only while the Wi-Fi page is open.
 Singleton {
     id: root
 
-    property bool wifiOn: false
-    property int signal: 0                       // 0-100, 0 when not connected
-    readonly property bool connected: signal > 0
+    readonly property var device: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null   // null: no Wi-Fi adapter
+    readonly property bool wifiOn: Networking.wifiEnabled
 
-    function refresh() { radio.running = true }
+    // One entry per SSID. Without a scan this is just the saved networks in range.
+    readonly property var networks: (device?.networks.values ?? [])
+        .filter(n => n.name !== "")
+        .sort((a, b) => (b.connected - a.connected) || (b.known - a.known)
+            || (b.signalStrength - a.signalStrength) || a.name.localeCompare(b.name))
 
-    function toggleWifi() {
-        wifiOn = !wifiOn
-        toggler.command = ["nmcli", "radio", "wifi", wifiOn ? "on" : "off"]
-        toggler.running = true
+    readonly property var active: networks.find(n => n.connected) ?? null
+    readonly property bool connected: active !== null
+    readonly property int signal: active ? Math.round(active.signalStrength * 100) : 0   // 0-100
+
+    // A connection attempt failed. `reason` is a ConnectionFailReason.
+    signal failed(var network, int reason)
+
+    function toggleWifi() { Networking.wifiEnabled = !Networking.wifiEnabled }
+
+    function isOpen(n) { return n.security === WifiSecurityType.Open || n.security === WifiSecurityType.Owe }
+    function takesPassword(n) {
+        return [WifiSecurityType.WpaPsk, WifiSecurityType.Wpa2Psk, WifiSecurityType.Sae].includes(n.security)
+    }
+    // 802.1X and the like need more than a password; those are left to nmcli.
+    function isEnterprise(n) {
+        return [WifiSecurityType.WpaEap, WifiSecurityType.Wpa2Eap, WifiSecurityType.Wpa3SuiteB192,
+                WifiSecurityType.Leap, WifiSecurityType.DynamicWep].includes(n.security)
     }
 
-    Process {
-        id: radio
-        command: ["nmcli", "radio", "wifi"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.wifiOn = text.trim() === "enabled"
-                if (root.wifiOn) scan.running = true
-                else root.signal = 0
+    property var attempt: null   // { network, wasKnown } for the connection in progress
+
+    function connect(n, psk) {
+        attempt = { network: n, wasKnown: n.known }
+        if (psk) n.connectWithPsk(psk)
+        else n.connect()
+    }
+
+    Binding {
+        when: root.device !== null
+        target: root.device
+        property: "scannerEnabled"
+        value: root.wifiOn && PillState.mode === "wifi"
+    }
+
+    Instantiator {
+        model: root.networks
+        delegate: Connections {
+            required property var modelData
+            target: modelData
+            function onConnectionFailed(reason) {
+                // A failed first attempt can leave a saved profile behind (with the wrong
+                // password in it), which would make the network look known. Drop it.
+                if (root.attempt?.network === modelData && !root.attempt.wasKnown && modelData.known)
+                    modelData.forget()
+                root.failed(modelData, reason)
             }
         }
     }
-
-    Process {
-        id: scan   // reads cached scan results, does not trigger a new scan
-        command: ["nmcli", "-t", "-f", "ACTIVE,SIGNAL", "dev", "wifi", "list", "--rescan", "no"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const m = text.match(/^yes:(\d+)$/m)
-                root.signal = m ? parseInt(m[1]) : 0
-            }
-        }
-    }
-
-    Process { id: toggler; onExited: debounce.restart() }
-
-    Process {   // connection events (connect, disconnect, radio toggled)
-        running: true
-        command: ["nmcli", "monitor"]
-        stdout: SplitParser { onRead: debounce.restart() }
-    }
-
-    Timer { id: debounce; interval: 800; onTriggered: root.refresh() }
-    Timer { running: root.wifiOn; interval: 60000; repeat: true; onTriggered: root.refresh() }
-
-    Connections {
-        target: PillState
-        function onModeChanged() { if (PillState.mode === "control") root.refresh() }
-    }
-
-    Component.onCompleted: refresh()
 }
