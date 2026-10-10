@@ -15,6 +15,7 @@ RowLayout {
     property real mem: -1          // 0..1
     property int uptime: -1        // seconds
     property var lastCpu: null     // [total, idle] from the previous sample
+    property bool spread: true     // battery reading at the far end, rather than after the uptime
 
     function span(s) {
         const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60)
@@ -77,13 +78,23 @@ RowLayout {
     Label { text: "UP" }
     Value { text: root.uptime < 0 ? "--" : root.span(root.uptime) }
 
-    Item { Layout.fillWidth: true }
+    Item { visible: root.spread; Layout.fillWidth: true }
 
     // From UPower, so event driven. Nothing to show when full on AC (no draw).
+    Label {
+        visible: batt.visible
+        text: "BAT"
+        // The percentages get their gap from a fixed width; the uptime needs one.
+        // Same in both arrangements, so the implicit width doesn't depend on `spread`.
+        Layout.leftMargin: 10
+    }
     Value {
+        id: batt
         visible: Battery.present && Battery.watts > 0
         text: (Battery.charging ? "+" : "") + Battery.watts.toFixed(1) + "W"
             + (Battery.secondsLeft > 0 ? " " + root.span(Battery.secondsLeft) : "")
         color: Battery.charging ? Config.accent : Config.fg
     }
+
+    Item { visible: !root.spread; Layout.fillWidth: true }
 }

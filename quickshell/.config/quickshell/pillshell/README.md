@@ -63,10 +63,11 @@ thumbnails. Needs the two `wl-paste --watch` lines from the Hyprland config abov
 **Control center:** volume and brightness sliders (tap the speaker to mute), then five toggles:
 Wi-Fi, Bluetooth, Do not disturb, power profile (tap to cycle saver / balanced / performance),
 and the power menu. Right click the Wi-Fi or Bluetooth toggle to pick a network or device (below).
-Below that: a stats line (CPU, memory, uptime, and battery draw with time
-left; polled only while the control center is open), tray icons, the media card, and notifications
+Each toggle is captioned with its state (network, device, power profile).
+Below that: the media card, a stats line (CPU, memory, uptime, and battery draw with time
+left; polled only while the control center is open) with the tray icons beside it, and notifications
 (left click opens one in its app, right click dismisses it, trash clears all; the newest 50 are
-kept). Click outside to close. The brightness slider only shows on machines with a backlight.
+kept). The pill is only as tall as what it is showing, and grows as notifications arrive. Click outside to close. The brightness slider only shows on machines with a backlight.
 
 **Wi-Fi:** right click the Wi-Fi toggle. Networks in range, strongest first after the connected
 and saved ones. Click one to connect; a new network that needs a password asks for it (Enter to

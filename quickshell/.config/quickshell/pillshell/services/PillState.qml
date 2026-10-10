@@ -20,6 +20,11 @@ Singleton {
     readonly property int mediaWidth: 320
     readonly property int mediaHoverExtra: 56
 
+    // The control center is as tall as its content, up to the height of its pages.
+    // modules/ControlCenter.qml sets this; it keeps the last value between opens.
+    readonly property int controlMaxHeight: 520
+    property int controlHeight: 300
+
     // Everything that differs per mode. To add a mode: add a row here, a Slot for its
     // view in modules/Pill.qml, and (if it has a keybind) an IpcHandler in shell.qml.
     //   rank      what may interrupt what (see above)
@@ -33,10 +38,10 @@ Singleton {
         media:     { rank: 1, size: bar(mediaWidth + (hovered ? mediaHoverExtra : 0)), opened: false, keyboard: false },
         osd:       { rank: 2, size: bar(mediaWidth),                           opened: false, keyboard: false },
         notif:     { rank: 3, size: [380, 84, 28],                             opened: false, keyboard: false },
-        control:   { rank: 4, size: [440, 520, 28],                            opened: true,  keyboard: false },
-        // Pages of the control center: same rank and size, so it can switch to them and back.
-        wifi:      { rank: 4, size: [440, 520, 28],                            opened: true,  keyboard: true },
-        bluetooth: { rank: 4, size: [440, 520, 28],                            opened: true,  keyboard: true },
+        control:   { rank: 4, size: [440, controlHeight, 28],                  opened: true,  keyboard: false },
+        // Pages of the control center: same rank, so it can switch to them and back.
+        wifi:      { rank: 4, size: [440, controlMaxHeight, 28],               opened: true,  keyboard: true },
+        bluetooth: { rank: 4, size: [440, controlMaxHeight, 28],               opened: true,  keyboard: true },
         launcher:  { rank: 5, size: [520, 400, 28],                            opened: true,  keyboard: true },
         clipboard: { rank: 5, size: [520, 400, 28],                            opened: true,  keyboard: true },
         power:     { rank: 5, size: [360, 124, 28],                            opened: true,  keyboard: true }

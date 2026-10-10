@@ -13,7 +13,14 @@ Item {
     property var menuItem: null   // tray item whose menu is showing
 
     readonly property var bt: Bluetooth.defaultAdapter
-    readonly property int btConnected: Bluetooth.devices.values.filter(d => d.connected).length
+    readonly property var btDevice: Bluetooth.devices.values.find(d => d.connected) ?? null
+
+    // The pill hugs the content, up to the full height once notifications pile up.
+    // A tray menu covers the whole view, so it gets the full height too.
+    readonly property int wantedHeight: menuItem !== null ? PillState.controlMaxHeight
+        : Math.min(PillState.controlMaxHeight, col.implicitHeight + 40)
+    onWantedHeightChanged: PillState.controlHeight = wantedHeight
+    Component.onCompleted: PillState.controlHeight = wantedHeight
 
     component Txt: Text {
         color: Config.fg
@@ -22,7 +29,11 @@ Item {
     }
 
     ColumnLayout {
-        anchors { fill: parent; margins: 20 }
+        id: col
+        anchors { top: parent.top; left: parent.left; right: parent.right; margins: 20 }
+        // Never taller than its content: spare height (while the pill is still growing)
+        // would otherwise be shared out between the rows.
+        height: Math.min(implicitHeight, parent.height - 40)
         spacing: 14
 
         // --- Sliders ---
@@ -66,7 +77,7 @@ Item {
             }
         }
 
-        // --- Toggles: five equal tiles ---
+        // --- Toggles: five equal tiles, each captioned with its state ---
         Row {
             id: toggles
             Layout.fillWidth: true
@@ -77,14 +88,16 @@ Item {
                 width: toggles.tileWidth
                 code: Glyphs.wifi(Network.wifiOn, Network.connected, Network.signal)
                 active: Network.wifiOn
+                label: Network.connected ? Network.active.name : Network.wifiOn ? "Wi-Fi" : "Off"
                 onClicked: Network.toggleWifi()
                 onRightClicked: PillState.request("wifi", 0)
             }
             Tile {   // right click: pick a device
                 width: toggles.tileWidth
                 code: !root.bt?.enabled ? Glyphs.map.bluetoothOff
-                    : root.btConnected > 0 ? Glyphs.map.bluetoothOn : Glyphs.map.bluetooth
+                    : root.btDevice ? Glyphs.map.bluetoothOn : Glyphs.map.bluetooth
                 active: root.bt?.enabled ?? false
+                label: !root.bt?.enabled ? "Off" : root.btDevice ? root.btDevice.name : "Bluetooth"
                 onClicked: { if (root.bt) root.bt.enabled = !root.bt.enabled }
                 onRightClicked: PillState.request("bluetooth", 0)
             }
@@ -92,28 +105,23 @@ Item {
                 width: toggles.tileWidth
                 name: "moon"
                 active: Notifs.dnd
+                label: "Quiet"
                 onClicked: Notifs.dnd = !Notifs.dnd
             }
             Tile {   // tap to cycle: power saver, balanced, performance
                 width: toggles.tileWidth
                 code: Power.iconCode
                 active: Power.profile !== PowerProfile.Balanced
+                label: Power.profile === PowerProfile.PowerSaver ? "Saver"
+                    : Power.profile === PowerProfile.Performance ? "Performance" : "Balanced"
                 onClicked: Power.cycle()
             }
             Tile {   // opens the power menu
                 width: toggles.tileWidth
                 name: "power"
+                label: "Power"
                 onClicked: PillState.request("power", 0)
             }
-        }
-
-        // --- CPU, memory, uptime, battery draw ---
-        StatsRow { Layout.fillWidth: true }
-
-        // --- Tray ---
-        TrayRow {
-            visible: SystemTray.items.values.length > 0
-            onMenuRequested: item => root.menuItem = item
         }
 
         // --- Media ---
@@ -170,13 +178,41 @@ Item {
             }
         }
 
-        // --- Notifications ---
-        RowLayout {
+        // --- CPU, memory, uptime, battery draw and time left; tray on the right ---
+        // The tray drops to a row of its own when the two don't fit side by side.
+        GridLayout {
+            id: footer
             Layout.fillWidth: true
-            Icon { name: "bell"; size: 16; color: Config.dim }
+            readonly property bool hasTray: SystemTray.items.values.length > 0
+            readonly property bool oneRow: hasTray
+                && stats.implicitWidth + tray.implicitWidth + columnSpacing <= col.width
+            columns: oneRow ? 2 : 1
+            columnSpacing: 12
+            rowSpacing: 14
+
+            StatsRow {
+                id: stats
+                Layout.fillWidth: true
+                spread: !footer.oneRow
+            }
+            TrayRow {
+                id: tray
+                visible: footer.hasTray
+                onMenuRequested: item => root.menuItem = item
+            }
+        }
+
+        // --- Notifications: only there when there are any ---
+        RowLayout {
+            visible: notifList.count > 0
+            Layout.fillWidth: true
+            Txt {
+                text: notifList.count + (notifList.count === 1 ? " notification" : " notifications")
+                color: Config.dim
+                font.pixelSize: 11
+            }
             Item { Layout.fillWidth: true }
             IconButton {
-                visible: notifList.count > 0
                 size: 16
                 name: "trash"
                 color: Config.accent
@@ -184,18 +220,12 @@ Item {
             }
         }
 
-        Item {   // empty state: a quiet bell
-            visible: notifList.count === 0
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Icon { anchors.centerIn: parent; name: "bell"; size: 28; color: Config.track }
-        }
-
         ListView {
             id: notifList
             visible: count > 0
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.fillHeight: true   // shrinks, and scrolls, once the pill is at full height
+            Layout.preferredHeight: count * 58 + Math.max(0, count - 1) * spacing
             clip: true
             spacing: 6
 
